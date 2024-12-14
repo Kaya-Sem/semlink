@@ -51,7 +51,6 @@ func displaySemlinkXAttrs(path string) {
 	}
 
 	rawValue := string(value[:vLen])
-	fmt.Printf("Inspecting file: %s\n", path)
 	fmt.Printf("Raw xattr value: %s\n", rawValue)
 
 	fmt.Println("Parsed tags:")
@@ -60,7 +59,8 @@ func displaySemlinkXAttrs(path string) {
 		fmt.Println("  No tags found")
 		return
 	}
+
 	for _, tag := range tags {
-		fmt.Printf("  - %s\n", tag)
+		fmt.Printf("%s\n", tag)
 	}
 }
