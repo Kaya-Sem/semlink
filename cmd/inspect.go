@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const semlinkXattrKey = "user.semlink.tags"
+
 func init() {
 	rootCmd.AddCommand(inspectCmd)
 }
@@ -24,46 +26,41 @@ var inspectCmd = &cobra.Command{
 	},
 }
 
-func displaySemlinkXAttrs(path string) {
-	// Allocate a buffer to retrieve xattr keys
-	buf := make([]byte, 1024)
-	n, err := unix.Listxattr(path, buf)
-	if err != nil {
-		log.Fatalf("Failed to list xattr keys: %v", err)
+func parseTags(tagString string) []string {
+	if tagString == "" {
+		return []string{}
 	}
-	keys := parseXattrKeys(buf[:n])
-
-	// Filter and print keys that start with 'user.semlink'
-	fmt.Printf("Inspecting file: %s\n", path)
-	fmt.Println("Matching xattr keys:")
-	found := false
-	for _, key := range keys {
-		if strings.HasPrefix(key, "user.semlink") {
-			found = true
-			// Allocate a buffer to retrieve the value
-			value := make([]byte, 1024)
-			vLen, err := unix.Getxattr(path, key, value)
-			if err != nil {
-				log.Printf("Failed to get xattr value for %s: %v\n", key, err)
-				continue
-			}
-			fmt.Printf("  %s: %s\n", key, string(value[:vLen]))
-		}
+	// Split the string by comma and trim spaces
+	tags := strings.Split(tagString, ",")
+	for i, tag := range tags {
+		tags[i] = strings.TrimSpace(tag)
 	}
-
-	if !found {
-		fmt.Println("  No xattr keys found starting with 'user.semlink'.")
-	}
+	return tags
 }
 
-func parseXattrKeys(data []byte) []string {
-	keys := []string{}
-	start := 0
-	for i, b := range data {
-		if b == 0 {
-			keys = append(keys, string(data[start:i]))
-			start = i + 1
+func displaySemlinkXAttrs(path string) {
+	// Allocate a buffer to retrieve the value
+	value := make([]byte, 1024)
+	vLen, err := unix.Getxattr(path, semlinkXattrKey, value)
+	if err != nil {
+		if err == unix.ENODATA {
+			fmt.Printf("No tags found for: %s\n", path)
+			return
 		}
+		log.Fatalf("Failed to get xattr value: %v", err)
 	}
-	return keys
+
+	rawValue := string(value[:vLen])
+	fmt.Printf("Inspecting file: %s\n", path)
+	fmt.Printf("Raw xattr value: %s\n", rawValue)
+
+	fmt.Println("Parsed tags:")
+	tags := parseTags(rawValue)
+	if len(tags) == 0 {
+		fmt.Println("  No tags found")
+		return
+	}
+	for _, tag := range tags {
+		fmt.Printf("  - %s\n", tag)
+	}
 }
