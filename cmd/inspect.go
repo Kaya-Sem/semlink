@@ -9,8 +9,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const semlinkXattrKey = "user.semlink.tags"
-
 func init() {
 	rootCmd.AddCommand(inspectCmd)
 }
