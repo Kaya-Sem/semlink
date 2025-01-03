@@ -29,6 +29,12 @@ func init() {
 func runAdd(cmd *cobra.Command, args []string) {
 	path := args[0]
 
+	// Load registry
+	registry, err := loadRegistry()
+	if err != nil {
+		log.Fatalf("Failed to load registry: %v", err)
+	}
+
 	// Read existing tags
 	value := make([]byte, 1024)
 	vLen, err := unix.Getxattr(path, semlinkXattrKey, value)
@@ -49,7 +55,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 		tagMap[tag] = true
 	}
 
-	// Convert back to slice and join
+	// Convert back to slice
 	var allTags []string
 	for tag := range tagMap {
 		if tag != "" {
@@ -64,6 +70,19 @@ func runAdd(cmd *cobra.Command, args []string) {
 	err = unix.Setxattr(path, semlinkXattrKey, []byte(newTagString), 0)
 	if err != nil {
 		log.Fatalf("Failed to set xattr: %v", err)
+	}
+
+	// Get inode for the file info
+	var stat unix.Stat_t
+	if err := unix.Stat(path, &stat); err != nil {
+		log.Fatalf("Failed to stat file: %v", err)
+	}
+
+	inode := stat.Ino
+
+	// Update registry
+	if err := registry.updateFile(inode, path); err != nil {
+		log.Fatalf("Failed to update registry: %v", err)
 	}
 
 	fmt.Printf("Successfully updated tags for %s\n", path)
