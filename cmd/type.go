@@ -2,9 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"golang.org/x/sys/unix"
 	"log"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -24,48 +22,27 @@ func init() {
 	rootCmd.AddCommand(typeCmd)
 }
 
-func runType(cmd *cobra.Command, args []string) {
-	path := args[1]
-	typeArg := args[0]
-
+func setTypeTag(path, typeArg string) error {
 	if typeArg != "source" && typeArg != "receiver" {
-		log.Fatalf("Invalid type specified: %s. Must be 'source' or 'receiver'.", typeArg)
+		return fmt.Errorf("invalid type specified: %s. Must be 'source' or 'receiver'", typeArg)
 	}
 
-	// Read existing xattr
-	value := make([]byte, 1024)
-	vLen, err := unix.Getxattr(path, semlinkXattrKey, value)
+	setXattr(path, semlinkTypeXattrKey, typeArg)
 
-	var existingTags []string
-	if err == nil {
-		existingTags = strings.Split(string(value[:vLen]), ",")
-	} else if err != unix.ENODATA {
-		log.Fatalf("Failed to read existing xattr: %v", err)
-	}
+	return nil
+}
 
-	// Remove any existing type tags
-	filteredTags := []string{}
-	for _, tag := range existingTags {
-		if !strings.HasPrefix(tag, "type=") {
-			filteredTags = append(filteredTags, tag)
-		}
-	}
+func runType(cmd *cobra.Command, args []string) {
+	typeArg := args[0]
+	path := args[1]
 
-	// Add the new type tag
-	typeTag := fmt.Sprintf("type=%s", typeArg)
-	filteredTags = append(filteredTags, typeTag)
-
-	// Create the new xattr value
-	newTagString := strings.Join(filteredTags, ",")
-
-	// Set the updated xattr value
-	err = unix.Setxattr(path, semlinkXattrKey, []byte(newTagString), 0)
+	err := setTypeTag(path, typeArg)
 	if err != nil {
-		log.Fatalf("Failed to set xattr: %v", err)
+		log.Fatalf("%v", err)
 	}
 
 	if verbose {
 		fmt.Printf("Successfully updated type for %s\n", path)
-		fmt.Printf("New xattr data: %s\n", newTagString)
+		fmt.Printf("New xattr data: type=%s\n", typeArg)
 	}
 }
