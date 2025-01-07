@@ -37,7 +37,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 
 	// Read existing tags
 	value := make([]byte, 1024)
-	vLen, err := unix.Getxattr(path, semlinkXattrKey, value)
+	vLen, err := unix.Getxattr(path, semlinkTagXattrKey, value)
 
 	var existingTags []string
 	if err == nil {
@@ -66,11 +66,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 	// Create the new tag string
 	newTagString := strings.Join(allTags, ",")
 
-	// Set the new xattr value
-	err = unix.Setxattr(path, semlinkXattrKey, []byte(newTagString), 0)
-	if err != nil {
-		log.Fatalf("Failed to set xattr: %v", err)
-	}
+	setXattr(path, semlinkTagXattrKey, newTagString)
 
 	// Get inode for the file info
 	var stat unix.Stat_t
