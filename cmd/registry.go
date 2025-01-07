@@ -19,6 +19,24 @@ type Registry struct {
 	TaggedFiles []FileInfo `json:"tagged_files"`
 }
 
+// TODO: trigger update function.
+
+func mountDirectories() {
+	registry, err := loadRegistry()
+
+	if err != nil {
+		log.Fatalf("Failed to load registry: %v", err)
+	}
+
+	// sourceMap := make(map[string][]string)
+	// receiverMap := make(map[string][]string)
+
+	for _, folder := range registry.TaggedFiles {
+		fmt.Println(folder.FullPath)
+	}
+
+}
+
 func getRegistryPath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {

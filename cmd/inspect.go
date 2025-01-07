@@ -28,7 +28,6 @@ func displaySemlinkXAttrs(path string) {
 	fmt.Println("Parsed tags:")
 	if len(tags) == 0 {
 		fmt.Println("  No tags found")
-		return
 	}
 
 	for _, tag := range tags {

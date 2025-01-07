@@ -83,4 +83,6 @@ func runAdd(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("Successfully updated tags for %s\n", path)
 	fmt.Printf("New tags: %s\n", newTagString)
+
+	triggerUpdate()
 }

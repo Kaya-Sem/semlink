@@ -75,4 +75,6 @@ func runScrub(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	triggerUpdate()
+
 }

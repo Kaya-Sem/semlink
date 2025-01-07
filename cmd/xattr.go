@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -22,7 +23,7 @@ func getXattr(path string, semlinkXattrKey string) string {
 
 	if err != nil {
 		if err == unix.ENODATA {
-			log.Fatalf("Nothing found for %s with key %s\n", path, semlinkXattrKey)
+			fmt.Printf("Nothing found for %s with key %s\n", path, semlinkXattrKey)
 		}
 
 		log.Fatalf("Failed to get xattr value: %v", err)

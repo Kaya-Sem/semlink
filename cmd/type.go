@@ -22,7 +22,7 @@ func init() {
 	rootCmd.AddCommand(typeCmd)
 }
 
-func setTypeTag(path, typeArg string) error {
+func setType(path, typeArg string) error {
 	if typeArg != "source" && typeArg != "receiver" {
 		return fmt.Errorf("invalid type specified: %s. Must be 'source' or 'receiver'", typeArg)
 	}
@@ -36,7 +36,7 @@ func runType(cmd *cobra.Command, args []string) {
 	typeArg := args[0]
 	path := args[1]
 
-	err := setTypeTag(path, typeArg)
+	err := setType(path, typeArg)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
