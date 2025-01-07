@@ -17,28 +17,38 @@ func setXattr(path string, semlinkXattrKey string, value string) {
 	}
 }
 
-func getXattr(path string, semlinkXattrKey string) string {
+func getXattr(path string, semlinkXattrKey string) (string, error) {
 	value := make([]byte, 1024)
 	vLen, err := unix.Getxattr(path, semlinkXattrKey, value)
-
 	if err != nil {
 		if err == unix.ENODATA {
+			// Key not found
 			fmt.Printf("Nothing found for %s with key %s\n", path, semlinkXattrKey)
+			return "", nil
 		}
 
-		log.Fatalf("Failed to get xattr value: %v", err)
+		return "", fmt.Errorf("failed to get xattr value for %s: %w", path, err)
 	}
-
 	rawValue := string(value[:vLen])
-	return rawValue
+	return rawValue, nil
 }
 
 func getSemlinkType(path string) string {
-	return getXattr(path, semlinkTypeXattrKey)
+	folderType, err := getXattr(path, semlinkTypeXattrKey)
+
+	if err != nil {
+		logFatalWithCaller("error?", err)
+	}
+
+	return folderType
 }
 
 func getSemlinkTags(path string) []string {
-	tagString := getXattr(path, semlinkTagXattrKey)
+	tagString, err := getXattr(path, semlinkTagXattrKey)
+
+	if err != nil {
+		logFatalWithCaller("couldnt get tags", err)
+	}
 
 	tags := parseTags(tagString)
 

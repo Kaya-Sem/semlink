@@ -49,6 +49,22 @@ func runScrub(cmd *cobra.Command, args []string) {
 
 	// If --all flag is set, remove the semlink.type xattr as well
 	if allFlag {
+
+		// Get inode for the file info
+		var stat unix.Stat_t
+		if err := unix.Stat(path, &stat); err != nil {
+			log.Fatalf("Failed to stat file: %v", err)
+		}
+
+		inode := stat.Ino
+
+		// Remove from registry
+		if err := registry.removeFile(inode); err != nil {
+			log.Fatalf("Failed to remove entry from registry: %v", err)
+		}
+
+		fmt.Printf("Successfully removed registry entry for %s\n", path)
+
 		err = unix.Removexattr(path, semlinkTypeXattrKey)
 		if err != nil && err != unix.ENODATA {
 			log.Fatalf("Failed to remove type xattr: %v", err)
@@ -56,21 +72,6 @@ func runScrub(cmd *cobra.Command, args []string) {
 			fmt.Printf("No type data found for %s\n", path)
 		} else {
 			fmt.Printf("Successfully removed type data for %s\n", path)
-
-			// Get inode for the file info
-			var stat unix.Stat_t
-			if err := unix.Stat(path, &stat); err != nil {
-				log.Fatalf("Failed to stat file: %v", err)
-			}
-
-			inode := stat.Ino
-
-			// Remove from registry
-			if err := registry.removeFile(inode); err != nil {
-				log.Fatalf("Failed to remove entry from registry: %v", err)
-			}
-
-			fmt.Printf("Successfully removed registry entry for %s\n", path)
 
 		}
 	}

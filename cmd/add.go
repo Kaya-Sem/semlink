@@ -35,16 +35,9 @@ func runAdd(cmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to load registry: %v", err)
 	}
 
-	// Read existing tags
-	value := make([]byte, 1024)
-	vLen, err := unix.Getxattr(path, semlinkTagXattrKey, value)
+	ensureType(path)
 
-	var existingTags []string
-	if err == nil {
-		existingTags = parseTags(string(value[:vLen]))
-	} else if err != unix.ENODATA {
-		log.Fatalf("Failed to read existing tags: %v", err)
-	}
+	existingTags := getSemlinkTags(path)
 
 	// Combine existing and new tags, removing duplicates
 	tagMap := make(map[string]bool)
@@ -85,4 +78,13 @@ func runAdd(cmd *cobra.Command, args []string) {
 	fmt.Printf("New tags: %s\n", newTagString)
 
 	triggerUpdate()
+}
+
+func ensureType(path string) {
+	folderType := getSemlinkType(path)
+
+	if folderType == "" {
+		setType(path, defaultType)
+	}
+
 }
