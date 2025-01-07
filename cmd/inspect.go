@@ -2,9 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"golang.org/x/sys/unix"
-	"log"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -24,35 +21,11 @@ var inspectCmd = &cobra.Command{
 	},
 }
 
-func parseTags(tagString string) []string {
-	if tagString == "" {
-		return []string{}
-	}
-	// Split the string by comma and trim spaces
-	tags := strings.Split(tagString, ",")
-	for i, tag := range tags {
-		tags[i] = strings.TrimSpace(tag)
-	}
-	return tags
-}
-
 func displaySemlinkXAttrs(path string) {
-	// Allocate a buffer to retrieve the value
-	value := make([]byte, 1024)
-	vLen, err := unix.Getxattr(path, semlinkXattrKey, value)
-	if err != nil {
-		if err == unix.ENODATA {
-			fmt.Printf("No tags found for: %s\n", path)
-			return
-		}
-		log.Fatalf("Failed to get xattr value: %v", err)
-	}
 
-	rawValue := string(value[:vLen])
-	fmt.Printf("Raw xattr value: %s\n", rawValue)
+	tags := getSemlinkTags(path)
 
 	fmt.Println("Parsed tags:")
-	tags := parseTags(rawValue)
 	if len(tags) == 0 {
 		fmt.Println("  No tags found")
 		return
@@ -61,4 +34,6 @@ func displaySemlinkXAttrs(path string) {
 	for _, tag := range tags {
 		fmt.Printf("%s\n", tag)
 	}
+
+	fmt.Printf("type: %s", getSemlinkType(path))
 }
