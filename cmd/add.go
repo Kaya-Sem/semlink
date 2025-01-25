@@ -27,6 +27,9 @@ func init() {
 }
 
 func runAdd(cmd *cobra.Command, args []string) {
+
+	ensureIsPrivileged()
+
 	path := args[0]
 
 	// Load registry

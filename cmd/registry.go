@@ -16,7 +16,8 @@ type FileInfo struct {
 }
 
 type Registry struct {
-	TaggedFiles []FileInfo `json:"tagged_files"`
+	TaggedFiles    []FileInfo `json:"tagged_files"`
+	MountedFolders []FileInfo `json:"mounted_folders"`
 }
 
 func getRegistryPath() (string, error) {
@@ -42,7 +43,7 @@ func loadRegistry() (*Registry, error) {
 	data, err := os.ReadFile(registryPath)
 	if os.IsNotExist(err) {
 		// Return empty registry if file doesn't exist
-		return &Registry{TaggedFiles: []FileInfo{}}, nil
+		return &Registry{TaggedFiles: []FileInfo{}, MountedFolders: []FileInfo{}}, nil
 	} else if err != nil {
 		return nil, err
 	}
@@ -138,6 +139,5 @@ func (r *Registry) removeFile(inode uint64) error {
 	// Remove the file entry from the TaggedFiles slice
 	r.TaggedFiles = append(r.TaggedFiles[:indexToRemove], r.TaggedFiles[indexToRemove+1:]...)
 
-	// Save the updated registry
 	return r.save()
 }

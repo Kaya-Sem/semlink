@@ -28,7 +28,11 @@ func init() {
 	scrubCmd.Flags().BoolVarP(&allFlag, "all", "a", false, "Remove all semlink xattr data, including type information and registry entry")
 }
 
+//  TODO: for each folder you want to scrub, if its virtual, unmount everything in it
+
 func runScrub(cmd *cobra.Command, args []string) {
+	ensureIsPrivileged()
+
 	path := args[0]
 
 	// Load registry

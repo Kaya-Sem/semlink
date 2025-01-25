@@ -3,9 +3,15 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
+	"path"
 	"runtime"
 	"strings"
+
+	"golang.org/x/sys/unix"
 )
+
+//  TODO: add a command to trigger an update manually -> users can run it at startup to mount everything
 
 func triggerUpdate() {
 
@@ -14,6 +20,7 @@ func triggerUpdate() {
 	/*  TODO: before mounting, attempt a repair (system Inode scan) */
 
 	// resolve_orphans()
+	// unmount_all()
 	mountDirectories()
 }
 
@@ -26,16 +33,13 @@ func mountDirectories() {
 	sourceMap := make(map[string][]string)
 	receiverMap := make(map[string][]string)
 
-	/* TODO: before mounting, attempt a repair (system Inode scan) */
-
 	for _, folder := range registry.TaggedFiles {
 		folderType := getSemlinkType(folder.FullPath)
 		tags := getSemlinkTags(folder.FullPath)
 
 		if folderType == "receiver" {
 			for _, tag := range tags {
-				// Check if the tag is already a key in the receiverMap
-				if _, ok := receiverMap[tag]; !ok {
+				if _, ok := receiverMap[tag]; !ok { // tag present?
 					// If not, initialize it with a new slice
 					receiverMap[tag] = []string{}
 				}
@@ -44,8 +48,7 @@ func mountDirectories() {
 			}
 		} else if folderType == "source" {
 			for _, tag := range tags {
-				// Check if the tag is already a key in the sourceMap
-				if _, ok := sourceMap[tag]; !ok {
+				if _, ok := sourceMap[tag]; !ok { // tag present?
 					// If not, initialize it with a new slice
 					sourceMap[tag] = []string{}
 				}
@@ -60,6 +63,24 @@ func mountDirectories() {
 	// Example: Print the maps to verify the results
 	fmt.Println("Receiver Map:", receiverMap)
 	fmt.Println("Source Map:", sourceMap)
+
+	for tag, fileInfoSlice := range sourceMap {
+		targets := receiverMap[tag]
+
+		for _, sourcePath := range fileInfoSlice {
+			for _, targetPath := range targets {
+				err := linkFolder(sourcePath, targetPath)
+
+				if err != nil {
+					fmt.Printf("Error: %v", err)
+
+				}
+
+			}
+		}
+
+	}
+
 }
 
 func logFatalWithCaller(msg string, err error) {
@@ -83,4 +104,40 @@ func trimFunctionName(funcName string) string {
 		return funcName[idx+1:]
 	}
 	return funcName
+}
+
+// linkFolder creates a subdirectory in the target path and binds the source folder to it.
+func linkFolder(source string, target string) error {
+	// Extract the last piece of the target path (the last folder name)
+	subDir := path.Join(target, path.Base(source))
+
+	// Create the subdirectory in the target folder
+	err := os.MkdirAll(subDir, 0755) // Create target subdirectory if it doesn't exist
+	if err != nil {
+		return fmt.Errorf("failed to create subdirectory %s: %w", subDir, err)
+	}
+
+	err = setType(subDir, VIRTUAL)
+
+	if err != nil {
+		return fmt.Errorf("failed to set type %s on %s", VIRTUAL, subDir)
+	}
+
+	// Bind mount the source folder to the subdirectory in the target folder
+	err = unix.Mount(source, subDir, "", unix.MS_BIND, "")
+	if err != nil {
+		return fmt.Errorf("failed to bind mount %s to %s: %w", source, subDir, err)
+	}
+
+	return nil
+}
+
+func isPrivileged() bool {
+	return os.Geteuid() == 0
+}
+
+func ensureIsPrivileged() {
+	if !isPrivileged() {
+		log.Fatal("Permission denied: Please run with sudo or as root.")
+	}
 }

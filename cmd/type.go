@@ -22,8 +22,15 @@ func init() {
 	rootCmd.AddCommand(typeCmd)
 }
 
+func isValidType(typeArg string) bool {
+	return (typeArg == RECEIVER) || (typeArg == VIRTUAL) || (typeArg == SOURCE)
+}
+
 func setType(path, typeArg string) error {
-	if typeArg != "source" && typeArg != "receiver" {
+	ensureIsPrivileged()
+
+	//  TODO: create a validator function for this.
+	if isValidType(typeArg) {
 		return fmt.Errorf("invalid type specified: %s. Must be 'source' or 'receiver'", typeArg)
 	}
 
@@ -45,4 +52,6 @@ func runType(cmd *cobra.Command, args []string) {
 		fmt.Printf("Successfully updated type for %s\n", path)
 		fmt.Printf("New xattr data: type=%s\n", typeArg)
 	}
+
+	triggerUpdate()
 }
