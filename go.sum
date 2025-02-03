@@ -1,3 +1,5 @@
+github.com/Kaya-Sem/oopsie v1.0.0 h1:nbE55KW2mHhSSgGZ1rnINz/2SJmb8KMkOVpd6hN3RQM=
+github.com/Kaya-Sem/oopsie v1.0.0/go.mod h1:RdGgGPsVr8/2Aa5bD2ATmF+mP/0uoH8w7Ym6GBxqLco=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
