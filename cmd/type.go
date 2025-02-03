@@ -3,7 +3,9 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 
+	"github.com/Kaya-Sem/oopsie"
 	"github.com/spf13/cobra"
 )
 
@@ -30,8 +32,9 @@ func setType(path, typeArg string) error {
 	ensureIsPrivileged()
 
 	//  TODO: create a validator function for this.
-	if isValidType(typeArg) {
-		return fmt.Errorf("invalid type specified: %s. Must be 'source' or 'receiver'", typeArg)
+	if !isValidType(typeArg) {
+		fmt.Print(oopsie.CreateOopsie().Title("Invalid type").IndicatorColors(oopsie.BLACK, oopsie.RED).Error(fmt.Errorf("Invalid type specified: %s. Must be 'source' or 'receiver'", typeArg)).Render())
+		os.Exit(1)
 	}
 
 	setXattr(path, semlinkTypeXattrKey, typeArg)

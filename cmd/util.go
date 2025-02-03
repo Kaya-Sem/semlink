@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/Kaya-Sem/oopsie"
 	"golang.org/x/sys/unix"
 )
 
@@ -138,6 +139,7 @@ func isPrivileged() bool {
 
 func ensureIsPrivileged() {
 	if !isPrivileged() {
-		log.Fatal("Permission denied: Please run with sudo or as root.")
+		fmt.Print(oopsie.CreateOopsie().Title("Invalid Permissions").Error(fmt.Errorf("semlink needs privileges to function. Please run with sudo, doas or as root.")).Render())
+		os.Exit(1)
 	}
 }
