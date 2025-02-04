@@ -12,6 +12,11 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+type FolderInfo struct {
+	Inode    uint64 `json:"inode"`
+	FullPath string `json:"full_path"`
+}
+
 //  TODO: add a command to trigger an update manually -> users can run it at startup to mount everything
 
 func triggerUpdate() {

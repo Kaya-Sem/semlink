@@ -13,14 +13,32 @@ var verbose bool
 
 func init() {
 	typeCmd := &cobra.Command{
-		Use:   "type [flags] path",
-		Short: "Set the type of a file or directory",
-		Long:  `Set the type of a file or directory in the semlink xattr data. The type can be either 'source' or 'receiver'.`,
-		Args:  cobra.ExactArgs(2),
-		Run:   runType,
+		Use:   "type",
+		Short: "Manage directory types",
+		Long:  `Manage the type of a directory in the semlink xattr data.`,
 	}
 
-	typeCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
+	setCmd := &cobra.Command{
+		Use:   "set [flags] type path",
+		Short: "Set the type of a  directory",
+		Long:  `Set the type of a directory in the semlink xattr data. The type can be either 'source' or 'receiver'.`,
+		Args:  cobra.ExactArgs(2),
+		Run:   runTypeSet,
+	}
+
+	setCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
+	typeCmd.AddCommand(setCmd)
+
+	listCmd := &cobra.Command{
+		Use:   "list type",
+		Short: "List all directories with given type",
+		Long:  `List the directories with given type in the semlink xattr data.`,
+		Args:  cobra.MaximumNArgs(1),
+		Run:   runTypeList,
+	}
+
+	typeCmd.AddCommand(listCmd)
+
 	rootCmd.AddCommand(typeCmd)
 }
 
@@ -28,10 +46,10 @@ func isValidType(typeArg string) bool {
 	return (typeArg == RECEIVER) || (typeArg == VIRTUAL) || (typeArg == SOURCE)
 }
 
+// TODO: ensure path is a folder
 func setType(path, typeArg string) error {
 	ensureIsPrivileged()
 
-	//  TODO: create a validator function for this.
 	if !isValidType(typeArg) {
 		fmt.Print(oopsie.CreateOopsie().Title("Invalid type").IndicatorColors(oopsie.BLACK, oopsie.RED).Error(fmt.Errorf("Invalid type specified: %s. Must be 'source' or 'receiver'", typeArg)).Render())
 		os.Exit(1)
@@ -42,7 +60,7 @@ func setType(path, typeArg string) error {
 	return nil
 }
 
-func runType(cmd *cobra.Command, args []string) {
+func runTypeSet(cmd *cobra.Command, args []string) {
 	typeArg := args[0]
 	path := args[1]
 
@@ -57,4 +75,35 @@ func runType(cmd *cobra.Command, args []string) {
 	}
 
 	triggerUpdate()
+}
+
+func runTypeList(cmd *cobra.Command, args []string) {
+	if len(args) == 0 {
+		listAllTypes()
+	} else {
+		listType(args[0])
+	}
+}
+
+// TODO: Define these functions
+func listAllTypes() {
+	// Placeholder function
+	fmt.Println("Listing all types (not yet implemented)")
+}
+
+func listType(t string) {
+	folderInfoList, err := GetTypedFolders(t)
+
+	if err != nil {
+		fmt.Print(oopsie.CreateOopsie().Title("Encountered an issue").Error(err).Render())
+	}
+
+	if len(folderInfoList) == 0 {
+
+		fmt.Print(oopsie.CreateOopsie().Title(fmt.Sprintf("No folders with type %s found", t)).IndicatorMessage("INFO").Error(fmt.Errorf("")).IndicatorColors(oopsie.GREEN, oopsie.BRIGHT_BLACK).Render())
+	}
+
+	for _, info := range folderInfoList {
+		fmt.Printf("%d: %s", info.Inode, info.FullPath)
+	}
 }

@@ -10,14 +10,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type FileInfo struct {
-	Inode    uint64 `json:"inode"`
-	FullPath string `json:"full_path"`
-}
-
 type Registry struct {
-	TaggedFiles    []FileInfo `json:"tagged_files"`
-	MountedFolders []FileInfo `json:"mounted_folders"`
+	TaggedFiles    []FolderInfo `json:"tagged_files"`
+	MountedFolders []FolderInfo `json:"mounted_folders"`
 }
 
 func getRegistryPath() (string, error) {
@@ -43,7 +38,7 @@ func loadRegistry() (*Registry, error) {
 	data, err := os.ReadFile(registryPath)
 	if os.IsNotExist(err) {
 		// Return empty registry if file doesn't exist
-		return &Registry{TaggedFiles: []FileInfo{}, MountedFolders: []FileInfo{}}, nil
+		return &Registry{TaggedFiles: []FolderInfo{}, MountedFolders: []FolderInfo{}}, nil
 	} else if err != nil {
 		return nil, err
 	}
@@ -86,7 +81,7 @@ func (r *Registry) updateFile(inode uint64, path string) error {
 	}
 
 	// Add a new entry if it doesn't exist
-	r.TaggedFiles = append(r.TaggedFiles, FileInfo{
+	r.TaggedFiles = append(r.TaggedFiles, FolderInfo{
 		Inode:    inode,
 		FullPath: absPath,
 	})

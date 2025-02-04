@@ -12,8 +12,8 @@ func init() {
 
 var inspectCmd = &cobra.Command{
 	Use:   "inspect",
-	Short: "Inspect file semlink data",
-	Long:  `List all xattr data starting with 'user.semlink' for the given file or directory.`,
+	Short: "Inspect folder semlink data",
+	Long:  `List all xattr data starting with 'user.semlink' for the given directory.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		filePath := args[0]
