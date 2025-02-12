@@ -114,22 +114,13 @@ func AddFolder(fi FolderInfo) error {
 	return nil
 }
 
-func addFolderToDatabase(path string, inode int, folderType string) error {
+func addFolderToDatabase(path string, inode int) error {
 	db := getDatabaseConnection()
 	if db == nil {
 		return fmt.Errorf("failed to connect to database")
 	}
 
 	defer db.Close()
-
-	query := `INSERT INTO folders (inode, path, type) VALUES(?,?,?)`
-
-	rows, err := db.Query(query, inode, path, folderType)
-	if err != nil {
-		return fmt.Errorf("Database query failed: %w", err)
-	}
-
-	defer rows.Close()
 
 	return nil
 }
@@ -139,7 +130,6 @@ func GetTypedFolders(t string) ([]FolderInfo, error) {
 	if db == nil {
 		return nil, fmt.Errorf("failed to connect to database")
 	}
-
 	defer db.Close()
 
 	query := `SELECT inode, path FROM folders WHERE type = ?`

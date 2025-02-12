@@ -21,7 +21,11 @@ type FolderInfo struct {
 
 func triggerUpdate() {
 
-	fmt.Printf("\nUpdate triggered!\n")
+	// check if verbose before printing
+
+	if verbose {
+		fmt.Printf("\n ⚙️Update triggered!\n")
+	}
 
 	/*  TODO: before mounting, attempt a repair (system Inode scan) */
 

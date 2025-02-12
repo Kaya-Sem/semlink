@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"golang.org/x/sys/unix"
 	"log"
 	"strings"
 
+	"golang.org/x/sys/unix"
+
+	"github.com/Kaya-Sem/oopsie"
 	"github.com/spf13/cobra"
 )
 
@@ -14,8 +16,8 @@ var tags []string
 func init() {
 	addCmd := &cobra.Command{
 		Use:   "add [flags] path",
-		Short: "Add tags to a file or directory",
-		Long:  `Add one or more tags to a file or directory's semlink xattr data.`,
+		Short: "Add tags to a directory",
+		Long:  `Add one or more tags to a directory's semlink xattr data.`,
 		Args:  cobra.ExactArgs(1),
 		Run:   runAdd,
 	}
@@ -32,13 +34,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 
 	path := args[0]
 
-	// Load registry
-	registry, err := loadRegistry()
-	if err != nil {
-		log.Fatalf("Failed to load registry: %v", err)
-	}
-
-	ensureType(path)
+	ensureHasType(path)
 
 	existingTags := getSemlinkTags(path)
 
@@ -72,18 +68,26 @@ func runAdd(cmd *cobra.Command, args []string) {
 
 	inode := stat.Ino
 
-	// Update registry
-	if err := registry.updateFile(inode, path); err != nil {
-		log.Fatalf("Failed to update registry: %v", err)
+	// ------- do this in database, not in registry -----
+
+	err := addFolderToDatabase(path, int(inode), getSemlinkType(path))
+	if err != nil {
+		fmt.Print(oopsie.CreateOopsie().Title("Database error").Error(err).IndicatorMessage("SQL").Render())
 	}
 
-	fmt.Printf("Successfully updated tags for %s\n", path)
-	fmt.Printf("New tags: %s\n", newTagString)
+	// -----------------------------
+
+	// check if verbose
+	if verbose {
+
+		fmt.Printf("Successfully updated tags for %s\n", path)
+		fmt.Printf("New tags: %s\n", newTagString)
+	}
 
 	triggerUpdate()
 }
 
-func ensureType(path string) {
+func ensureHasType(path string) {
 	folderType := getSemlinkType(path)
 
 	if folderType == "" {

@@ -104,6 +104,6 @@ func listType(t string) {
 	}
 
 	for _, info := range folderInfoList {
-		fmt.Printf("%d: %s", info.Inode, info.FullPath)
+		fmt.Printf("[%d] at %s", info.Inode, info.FullPath)
 	}
 }
