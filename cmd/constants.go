@@ -9,8 +9,4 @@ const (
 	registryFile        = "registry.json"
 	defaultType         = "source"
 	registryPermissions = 0755
-
-	RECEIVER = "receiver"
-	VIRTUAL  = "virtual"
-	SOURCE   = "source"
 )

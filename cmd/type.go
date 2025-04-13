@@ -9,6 +9,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	RECEIVER = "receiver"
+	VIRTUAL  = "virtual"
+	SOURCE   = "source"
+)
+
+var validTypes = []string{RECEIVER, VIRTUAL, SOURCE}
+
 var verbose bool
 
 func init() {
@@ -43,7 +51,12 @@ func init() {
 }
 
 func isValidType(typeArg string) bool {
-	return (typeArg == RECEIVER) || (typeArg == VIRTUAL) || (typeArg == SOURCE)
+	for _, t := range validTypes {
+		if t == typeArg {
+			return true
+		}
+	}
+	return false
 }
 
 // TODO: ensure path is a folder
@@ -79,16 +92,17 @@ func runTypeSet(cmd *cobra.Command, args []string) {
 
 func runTypeList(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
-		listAllTypes()
+		listValidTypes()
 	} else {
 		listType(args[0])
 	}
 }
 
-// TODO: Define these functions
-func listAllTypes() {
-	// Placeholder function
-	fmt.Println("Listing all types (not yet implemented)")
+func listValidTypes() {
+	fmt.Println("Available types:")
+	for _, t := range validTypes {
+		fmt.Printf(" - %s\n", t)
+	}
 }
 
 func listType(t string) {
