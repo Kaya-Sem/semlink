@@ -3,11 +3,14 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"golang.org/x/sys/unix"
 
 	"github.com/Kaya-Sem/oopsie"
+	"github.com/Kaya-Sem/semlink/cmd/repository"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +35,11 @@ func runAdd(cmd *cobra.Command, args []string) {
 
 	ensureIsPrivileged()
 
-	path := args[0]
+	rawPath := args[0]
+	path, err := filepath.Abs(rawPath)
+	if err != nil {
+		log.Fatalf("Failed to resolve absolute path: %v", err)
+	}
 
 	ensureHasType(path)
 
@@ -70,7 +77,13 @@ func runAdd(cmd *cobra.Command, args []string) {
 
 	// ------- do this in database, not in registry -----
 
-	err := addFolderToDatabase(path, int(inode), getSemlinkType(path))
+	repo, err := repository.NewSqliteRepo()
+	if err != nil {
+		fmt.Print(oopsie.CreateOopsie().Title("Database error").Error(err).IndicatorMessage("SQL").Render())
+		os.Exit(1)
+	}
+
+	err = repo.AddFolder(repository.FolderInfo{Inode: inode, FullPath: path})
 	if err != nil {
 		fmt.Print(oopsie.CreateOopsie().Title("Database error").Error(err).IndicatorMessage("SQL").Render())
 	}
@@ -90,8 +103,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 func ensureHasType(path string) {
 	folderType := getSemlinkType(path)
 
-	if folderType == "" {
+	if !isValidType(Type(folderType)) {
 		setType(path, defaultType)
 	}
-
 }

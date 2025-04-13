@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/sys/unix"
 )
 
 func init() {
@@ -22,6 +23,16 @@ var inspectCmd = &cobra.Command{
 }
 
 func displaySemlinkXAttrs(path string) {
+	ensureHasType(path)
+
+	var stat unix.Stat_t
+	if err := unix.Stat(path, &stat); err != nil {
+		fmt.Printf("Failed to stat file: %v\n", err)
+		return
+	}
+
+	inode := stat.Ino
+	fmt.Printf("Inode: %d\n", inode)
 
 	tags := getSemlinkTags(path)
 
@@ -34,5 +45,5 @@ func displaySemlinkXAttrs(path string) {
 		fmt.Printf("%s\n", tag)
 	}
 
-	fmt.Printf("type: %s", getSemlinkType(path))
+	fmt.Printf("type: %s\n", getSemlinkType(path))
 }

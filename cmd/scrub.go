@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"golang.org/x/sys/unix"
 	"log"
+	"os"
 
+	"golang.org/x/sys/unix"
+
+	"github.com/Kaya-Sem/semlink/cmd/repository"
 	"github.com/spf13/cobra"
 )
 
@@ -35,14 +38,8 @@ func runScrub(cmd *cobra.Command, args []string) {
 
 	path := args[0]
 
-	// Load registry
-	registry, err := loadRegistry()
-	if err != nil {
-		log.Fatalf("Failed to load registry: %v", err)
-	}
-
 	// Remove the user.semlink xattr
-	err = unix.Removexattr(path, semlinkTagXattrKey)
+	err := unix.Removexattr(path, semlinkTagXattrKey)
 	if err != nil && err != unix.ENODATA {
 		log.Fatalf("Failed to remove xattr: %v", err)
 	} else if err == unix.ENODATA {
@@ -62,9 +59,15 @@ func runScrub(cmd *cobra.Command, args []string) {
 
 		inode := stat.Ino
 
+		repo, err := repository.NewSqliteRepo()
+		if err != nil {
+			log.Fatalf("%v", err)
+		}
+
 		// Remove from registry
-		if err := registry.removeFile(inode); err != nil {
-			log.Fatalf("Failed to remove entry from registry: %v", err)
+		if err := repo.RemoveFolder(repository.FolderInfo{Inode: inode}); err != nil {
+			log.Fatalf("Failed to remove entry from database: %v", err)
+			os.Exit(1)
 		}
 
 		fmt.Printf("Successfully removed registry entry for %s\n", path)

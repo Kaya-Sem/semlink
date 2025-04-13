@@ -9,17 +9,14 @@ import (
 	"strings"
 
 	"github.com/Kaya-Sem/oopsie"
+	"github.com/Kaya-Sem/semlink/cmd/repository"
 	"golang.org/x/sys/unix"
 )
-
-type FolderInfo struct {
-	Inode    uint64 `json:"inode"`
-	FullPath string `json:"full_path"`
-}
 
 //  TODO: add a command to trigger an update manually -> users can run it at startup to mount everything
 
 func triggerUpdate() {
+	fmt.Println("\nSynchronising database...")
 
 	// check if verbose before printing
 
@@ -35,15 +32,22 @@ func triggerUpdate() {
 }
 
 func mountDirectories() {
-	registry, err := loadRegistry()
+
+	repo, err := repository.NewSqliteRepo()
 	if err != nil {
-		log.Fatalf("Failed to load registry: %v", err)
+		log.Fatalf("Failed to get repository: %v", err)
+		os.Exit(1)
+	}
+
+	folders, err := repo.GetAllFolders()
+	if err != nil {
+		log.Fatalf("Failed to get all folders: %v", err)
 	}
 
 	sourceMap := make(map[string][]string)
 	receiverMap := make(map[string][]string)
 
-	for _, folder := range registry.TaggedFiles {
+	for _, folder := range folders {
 		folderType := getSemlinkType(folder.FullPath)
 		tags := getSemlinkTags(folder.FullPath)
 
