@@ -21,14 +21,14 @@ var (
 
 var scrubCmd = &cobra.Command{
 	Use:   "scrub path",
-	Short: "Remove semlink xattr data and its registry entry",
-	Long:  `Remove the user.semlink xattr from a file or directory and delete its entry from the registry.`,
+	Short: "Remove semlink tags from a directory",
+	Long:  `Remove the user.semlink tags from a directory`,
 	Args:  cobra.ExactArgs(1),
 	Run:   runScrub,
 }
 
 func init() {
-	scrubCmd.Flags().BoolVarP(&allFlag, "all", "a", false, "Remove all semlink xattr data, including type information and registry entry")
+	scrubCmd.Flags().BoolVarP(&allFlag, "all", "a", false, "Remove all semlink xattr data, including type information and database")
 }
 
 //  TODO: for each folder you want to scrub, if its virtual, unmount everything in it
@@ -70,7 +70,9 @@ func runScrub(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 
-		fmt.Printf("Successfully removed registry entry for %s\n", path)
+		// TODO: remove tags from folder_tags
+
+		fmt.Printf("Successfully removed database entry for %s\n", path)
 
 		err = unix.Removexattr(path, semlinkTypeXattrKey)
 		if err != nil && err != unix.ENODATA {
@@ -84,5 +86,4 @@ func runScrub(cmd *cobra.Command, args []string) {
 	}
 
 	triggerUpdate()
-
 }

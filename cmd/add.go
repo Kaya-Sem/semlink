@@ -43,7 +43,10 @@ func runAdd(cmd *cobra.Command, args []string) {
 
 	ensureHasType(path)
 
-	existingTags := getSemlinkTags(path)
+	existingTags, err := getSemlinkTags(path)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
 
 	// Combine existing and new tags, removing duplicates
 	tagMap := make(map[string]bool)
@@ -75,24 +78,25 @@ func runAdd(cmd *cobra.Command, args []string) {
 
 	inode := stat.Ino
 
-	// ------- do this in database, not in registry -----
-
 	repo, err := repository.NewSqliteRepo()
 	if err != nil {
 		fmt.Print(oopsie.CreateOopsie().Title("Database error").Error(err).IndicatorMessage("SQL").Render())
 		os.Exit(1)
 	}
 
-	err = repo.AddFolder(repository.FolderInfo{Inode: inode, FullPath: path})
+	folder := repository.FolderInfo{Inode: inode, FullPath: path}
+
+	err = repo.AddFolder(folder)
 	if err != nil {
 		fmt.Print(oopsie.CreateOopsie().Title("Database error").Error(err).IndicatorMessage("SQL").Render())
 	}
 
-	// -----------------------------
+	err = repo.AddTagsToFolder(folder, allTags)
+	if err != nil {
+		log.Fatalf("Could not add tags to folder %s in the database: %v", folder.FullPath, err)
+	}
 
-	// check if verbose
 	if verbose {
-
 		fmt.Printf("Successfully updated tags for %s\n", path)
 		fmt.Printf("New tags: %s\n", newTagString)
 	}
@@ -101,9 +105,13 @@ func runAdd(cmd *cobra.Command, args []string) {
 }
 
 func ensureHasType(path string) {
-	folderType := getSemlinkType(path)
+	folderType, err := getSemlinkType(path)
+	if err != nil {
+		log.Fatalf("Coud not get type for %s", path)
+	}
 
 	if !isValidType(Type(folderType)) {
+		log.Printf("Invalid type found, replaced with %s", defaultType)
 		setType(path, defaultType)
 	}
 }

@@ -48,10 +48,23 @@ func mountDirectories() {
 	receiverMap := make(map[string][]string)
 
 	for _, folder := range folders {
-		folderType := getSemlinkType(folder.FullPath)
-		tags := getSemlinkTags(folder.FullPath)
+		folderType, err := getSemlinkType(folder.FullPath)
+		if err != nil {
+			if verbose {
+				log.Printf("Could not get type for folder %s: %v", folder.FullPath, err)
+			}
+			continue
+		}
 
-		if folderType == "receiver" {
+		tags, err := getSemlinkTags(folder.FullPath)
+		if err != nil {
+			if verbose {
+				log.Printf("Could not get tags for folder %s: %v", folder.FullPath, err)
+			}
+			continue
+		}
+
+		if folderType == string(RECEIVER) {
 			for _, tag := range tags {
 				if _, ok := receiverMap[tag]; !ok { // tag present?
 					// If not, initialize it with a new slice
@@ -60,7 +73,7 @@ func mountDirectories() {
 				// Add the folder path to the slice
 				receiverMap[tag] = append(receiverMap[tag], folder.FullPath)
 			}
-		} else if folderType == "source" {
+		} else if folderType == string(SOURCE) {
 			for _, tag := range tags {
 				if _, ok := sourceMap[tag]; !ok { // tag present?
 					// If not, initialize it with a new slice
@@ -70,11 +83,11 @@ func mountDirectories() {
 				sourceMap[tag] = append(sourceMap[tag], folder.FullPath)
 			}
 		} else {
-			log.Fatalf("Unexpected type: %s for path %s", folderType, folder.FullPath)
+			log.Printf("Unexpected type encountered for folder %s: %s", folder.FullPath, folderType)
+			continue
 		}
 	}
 
-	// Example: Print the maps to verify the results
 	fmt.Println("Receiver Map:", receiverMap)
 	fmt.Println("Source Map:", sourceMap)
 
@@ -120,7 +133,7 @@ func trimFunctionName(funcName string) string {
 	return funcName
 }
 
-// linkFolder creates a subdirectory in the target path and binds the source folder to it.
+// TODO: a linked folder should be set in the database
 func linkFolder(source string, target string) error {
 	// Extract the last piece of the target path (the last folder name)
 	subDir := path.Join(target, path.Base(source))

@@ -141,6 +141,8 @@ func (folderRepo *SqliteRepo) AddFolder(folderInfo FolderInfo) error {
 
 func (repo *SqliteRepo) RemoveFolder(folderInfo FolderInfo) error {
 
+	// TODO: remove also tags in folder_tags.
+
 	stmt := `DELETE FROM folders WHERE inode = ?`
 	_, err := repo.conn.Exec(stmt, folderInfo.Inode)
 
@@ -157,7 +159,7 @@ func (repo *SqliteRepo) AddTagsToFolder(folderInfo FolderInfo, tags []string) er
 	defer tx.Rollback()
 
 	var folderID int
-	err = tx.QueryRow(`SELECT id FROM folders WHERE path = ?`, folderInfo.FullPath).Scan(&folderID)
+	err = tx.QueryRow(`SELECT id FROM folders WHERE filepath = ?`, folderInfo.FullPath).Scan(&folderID)
 	if err != nil {
 		return fmt.Errorf("folder not found: %w", err)
 	}

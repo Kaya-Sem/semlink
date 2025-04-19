@@ -7,6 +7,7 @@ import (
 
 	"github.com/Kaya-Sem/oopsie"
 	"github.com/spf13/cobra"
+	"slices"
 )
 
 type Type string
@@ -54,12 +55,7 @@ func init() {
 }
 
 func isValidType(typeArg Type) bool {
-	for _, t := range validTypes {
-		if t == typeArg {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(validTypes, typeArg)
 }
 
 // TODO: ensure path is a folder
