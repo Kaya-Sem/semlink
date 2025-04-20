@@ -1,1 +1,4 @@
 build
+test_folder
+coverage.html
+coverage.out
