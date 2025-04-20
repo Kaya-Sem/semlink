@@ -38,11 +38,11 @@ func getDBPath() string {
 	}
 
 	dbDir := filepath.Join(home, databaseDirectory)
-	return filepath.Join(dbDir, databaseFilename)
+	return dbDir
 }
 
 func getDatabaseConnection() (*sql.DB, error) {
-	err := ensureDB()
+	err := ensureDB(getDBPath())
 	if err != nil {
 		return nil, err
 	}
@@ -190,16 +190,16 @@ func (repo *SqliteRepo) Obliterate() error {
 	return nil
 }
 
-func ensureDB() error {
-	fmt.Println("ensureDB called")
-	dbPath := getDBPath()
+func ensureDB(path string) error {
 
-	fmt.Println(dbPath)
+	dbFilePath := filepath.Join(path, databaseFilename)
 
 	// Check if the database file exists
-	_, err := os.Stat(dbPath)
+	fileInfo, err := os.Stat(dbFilePath)
 	if err == nil {
-		// File exists, no need to create it
+		if fileInfo.IsDir() {
+			return fmt.Errorf("database path exists but is a directory: %s", dbFilePath)
+		}
 		return nil
 	}
 
@@ -207,13 +207,13 @@ func ensureDB() error {
 		// The database file does not exist, create it
 
 		// Create necessary directories if they don't exist
-		dir := filepath.Dir(dbPath)
+		dir := filepath.Dir(dbFilePath)
 		if err := os.MkdirAll(dir, 0775); err != nil {
 			return fmt.Errorf("could not create directory for database: %v", err)
 		}
 
 		// Create the empty database file
-		file, err := os.Create(dbPath)
+		file, err := os.Create(dbFilePath)
 		if err != nil {
 			return fmt.Errorf("could not create database file: %v", err)
 		}
@@ -223,7 +223,7 @@ func ensureDB() error {
 		fmt.Println("Database file created.")
 	}
 
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite3", dbFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open DB for schema init: %w", err)
 	}
