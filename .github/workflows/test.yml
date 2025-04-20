@@ -25,12 +25,18 @@ jobs:
         go mod download
         go mod verify
 
-    - name: Run tests with coverage
+    - name: Run privileged tests
       run: |
-        # Run non-privileged tests first
-        go test -v -coverprofile=coverage.out ./...
-        # Run privileged tests
-        sudo go test -v -run "TestSetType" ./cmd
+        sudo go test -v -coverprofile=privileged.out ./cmd
+
+    - name: Run non-privileged tests
+      run: |
+        go test -v -coverprofile=nonprivileged.out ./cmd/repository
+
+    - name: Combine coverage reports
+      run: |
+        echo "mode: set" > coverage.out
+        grep -h -v "^mode:" privileged.out nonprivileged.out >> coverage.out
         go tool cover -html=coverage.out -o coverage.html
 
     - name: Upload coverage report
