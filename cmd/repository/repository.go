@@ -219,8 +219,6 @@ func ensureDB(path string) error {
 		}
 		defer file.Close()
 
-		// Optionally, initialize the database schema after creating the file
-		fmt.Println("Database file created.")
 	}
 
 	db, err := sql.Open("sqlite3", dbFilePath)

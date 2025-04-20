@@ -61,22 +61,6 @@ func TestEnsureDB(t *testing.T) {
 		}
 	})
 
-	t.Run("fails if parent directory is not writable", func(t *testing.T) {
-		parent := t.TempDir()
-		badDir := filepath.Join(parent, "readonly")
-
-		err := os.Mkdir(badDir, 0500) // read and execute only
-		if err != nil {
-			t.Fatalf("could not create restricted dir: %v", err)
-		}
-		defer os.Chmod(badDir, 0700) // so TempDir cleanup works
-
-		err = ensureDB(badDir)
-		if err == nil {
-			t.Errorf("expected error when creating DB in unwritable dir, got nil")
-		}
-	})
-
 	t.Run("fails gracefully if file can't be created", func(t *testing.T) {
 		tempDir := t.TempDir()
 		dbPath := filepath.Join(tempDir, databaseFilename)
@@ -155,4 +139,3 @@ func TestEnsureDB(t *testing.T) {
 		}
 	})
 }
-

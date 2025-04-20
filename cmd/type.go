@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/Kaya-Sem/oopsie"
-	"github.com/spf13/cobra"
 	"slices"
+
+	"github.com/spf13/cobra"
 )
 
 type Type string
@@ -21,15 +21,14 @@ const (
 var validTypes = []Type{RECEIVER, VIRTUAL, SOURCE}
 var validUserFacingTypes = []Type{RECEIVER, SOURCE} // marking a dir as virtual might mark its death because force removal on nuke
 
-var verbose bool
+var verbose bool = false
+var typeCmd = &cobra.Command{
+	Use:   "type",
+	Short: "Manage directory types",
+	Long:  `Manage the type of a directory in the semlink xattr data.`,
+}
 
 func init() {
-	typeCmd := &cobra.Command{
-		Use:   "type",
-		Short: "Manage directory types",
-		Long:  `Manage the type of a directory in the semlink xattr data.`,
-	}
-
 	setCmd := &cobra.Command{
 		Use:   "set [flags] type path",
 		Short: "Set the type of a  directory",
@@ -61,23 +60,13 @@ func isValidType(typeArg Type) bool {
 // TODO: ensure path is a folder
 func setType(path string, typeArg Type) error {
 	ensureIsPrivileged()
-	if !isDirectory(path) {
 
-		fmt.Print(oopsie.CreateOopsie().Title("Not a folder").IndicatorColors(oopsie.BLACK, oopsie.RED).Error(fmt.Errorf("Only folders are supported in semlink")).Render())
-		os.Exit(1)
+	if !isDirectory(path) {
+		return fmt.Errorf("%s is not a directory", path)
 	}
 
 	if !isValidType(typeArg) {
-		validStrs := make([]string, len(validUserFacingTypes))
-		for i, t := range validUserFacingTypes {
-			validStrs[i] = string(t)
-		}
-		fmt.Print(oopsie.CreateOopsie().
-			Title("Invalid type").
-			IndicatorColors(oopsie.BLACK, oopsie.RED).
-			Error(fmt.Errorf("Invalid type specified: %s. Must be one of: %v", typeArg, validStrs)).
-			Render())
-		os.Exit(1)
+		return fmt.Errorf("%s is not a valid type", typeArg)
 	}
 
 	setXattr(path, semlinkTypeXattrKey, string(typeArg))
@@ -102,21 +91,14 @@ func runTypeSet(cmd *cobra.Command, args []string) {
 	triggerUpdate()
 }
 
-// func runTypeList(cmd *cobra.Command, args []string) {
-// 	if len(args) == 0 {
-// 		listValidTypes()
-// 	} else {
-// 		listType(args[0])
-// 	}
-// }
-
 func listValidTypes() {
 	fmt.Println("Available types:")
-	for _, t := range validTypes {
+	for _, t := range validUserFacingTypes {
 		fmt.Printf(" - %s\n", t)
 	}
 }
 
+// TODO: more thorough testing
 func isDirectory(path string) bool {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -124,6 +106,16 @@ func isDirectory(path string) bool {
 	}
 	return info.IsDir()
 }
+
+// TODO: renenable command
+
+// func runTypeList(cmd *cobra.Command, args []string) {
+// 	if len(args) == 0 {
+// 		listValidTypes()
+// 	} else {
+// 		listType(args[0])
+// 	}
+// }
 
 // func listType(t string) {
 // 	folderInfoList, err := GetTypedFolders(t)
