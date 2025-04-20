@@ -27,7 +27,10 @@ jobs:
 
     - name: Run tests with coverage
       run: |
+        # Run non-privileged tests first
         go test -v -coverprofile=coverage.out ./...
+        # Run privileged tests
+        sudo go test -v -run "TestSetType" ./cmd
         go tool cover -html=coverage.out -o coverage.html
 
     - name: Upload coverage report

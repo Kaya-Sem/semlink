@@ -9,7 +9,12 @@ import (
 
 // This test will not pass for others
 func TestGetDBPath(t *testing.T) {
-	want := "/home/kayasem/.config/semlink"
+	home := os.Getenv("HOME")
+	if home == "" {
+		t.Fatal("HOME environment variable not set")
+	}
+
+	want := filepath.Join(home, databaseDirectory)
 	have := getDBPath()
 
 	if want != have {
