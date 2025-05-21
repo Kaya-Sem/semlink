@@ -16,7 +16,9 @@ import (
 //  TODO: add a command to trigger an update manually -> users can run it at startup to mount everything
 
 func triggerUpdate() {
-	fmt.Println("\nSynchronising database...")
+	if verbose {
+		fmt.Println("\nSynchronising database...")
+	}
 
 	// check if verbose before printing
 
@@ -41,7 +43,8 @@ func mountDirectories() {
 
 	folders, err := repo.GetAllFolders()
 	if err != nil {
-		log.Fatalf("Failed to get all folders: %v", err)
+		fmt.Printf(oopsie.CreateOopsie().IndicatorMessage("Database").Error(err).Render())
+		os.Exit(1)
 	}
 
 	sourceMap := make(map[string][]string)

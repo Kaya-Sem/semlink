@@ -17,3 +17,21 @@
 <p align="center">
   <img src="/images/banner.png" width="100%" />
 </p>
+
+
+## How it works
+
+
+## Installation
+
+`go install github.com/Kaya-Sem/semlink`
+
+##### From source
+
+```
+git clone 
+
+cd
+go build -o semlink
+ln -s ...
+````

@@ -149,6 +149,20 @@ func (repo *SqliteRepo) RemoveFolder(folderInfo FolderInfo) error {
 	return err
 }
 
+func (repo *SqliteRepo) HasFolder(folderInfo FolderInfo) (bool, error) {
+	query := `SELECT * FROM folders WHERE inode = ? && filepath = ?`
+
+	folder := folderInfo
+
+	if err := repo.conn.QueryRow(query, folderInfo.Inode, folderInfo.FullPath).Scan(&folder); err == nil {
+		return false, nil
+	} else if err == sql.ErrNoRows {
+		return true, nil
+	} else {
+		return false, err
+	}
+}
+
 func (repo *SqliteRepo) AddTagsToFolder(folderInfo FolderInfo, tags []string) error {
 	tx, err := repo.conn.Begin()
 	if err != nil {
@@ -181,6 +195,18 @@ func (repo *SqliteRepo) AddTagsToFolder(folderInfo FolderInfo, tags []string) er
 			return fmt.Errorf("failed to link folder and tag: %w", err)
 		}
 	}
+
+	return tx.Commit()
+}
+
+// TODO: implement
+func (repo *SqliteRepo) RemoveTagsFromFolder(folderInfo FolderInfo, tags []string) error {
+	tx, err := repo.conn.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
 
 	return tx.Commit()
 }

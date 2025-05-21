@@ -14,6 +14,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// TODO: make sure we are not inside a mounted folder ourselves. Test the looping and how linux handles it.
+// if it doesnt work out, perhaps walk the parents and check if noone is virtual
+
 var tags []string
 
 func init() {
@@ -86,6 +89,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 
 	folder := repository.FolderInfo{Inode: inode, FullPath: path}
 
+	// TODO: check if folder exists, and create if don't
 	err = repo.AddFolder(folder)
 	if err != nil {
 		fmt.Print(oopsie.CreateOopsie().Title("Database error").Error(err).IndicatorMessage("SQL").Render())
