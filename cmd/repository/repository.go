@@ -37,20 +37,22 @@ func getDBPath() string {
 		os.Exit(1)
 	}
 
-	dbDir := filepath.Join(home, databaseDirectory)
-	return dbDir
+	dbPath := filepath.Join(home, databaseDirectory)
+	return dbPath
 }
 
 func getDatabaseConnection() (*sql.DB, error) {
-	err := ensureDB(getDBPath())
+	dbPath := getDBPath()
+	err := ensureDB(dbPath)
 	if err != nil {
 		return nil, err
 	}
 
-	path := getDBPath() // Use the correct path now
-	db, err := sql.Open("sqlite3", path)
+	// Join the database filename to the path
+	dbFilePath := filepath.Join(dbPath, databaseFilename)
+	db, err := sql.Open("sqlite3", dbFilePath)
 	if err != nil {
-		fmt.Printf("Could not open database at %s\n", path)
+		fmt.Printf("getDatabaseConnection(): Could not open database at %s\n", dbFilePath)
 		return nil, err
 	}
 

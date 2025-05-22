@@ -83,6 +83,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 
 	repo, err := repository.NewSqliteRepo()
 	if err != nil {
+		logFatalWithCaller("err", err)
 		fmt.Print(oopsie.CreateOopsie().Title("Database error").Error(err).IndicatorMessage("SQL").Render())
 		os.Exit(1)
 	}
@@ -92,7 +93,10 @@ func runAdd(cmd *cobra.Command, args []string) {
 	// TODO: check if folder exists, and create if don't
 	err = repo.AddFolder(folder)
 	if err != nil {
+
+		logFatalWithCaller("err", err)
 		fmt.Print(oopsie.CreateOopsie().Title("Database error").Error(err).IndicatorMessage("SQL").Render())
+		os.Exit(1)
 	}
 
 	err = repo.AddTagsToFolder(folder, allTags)
