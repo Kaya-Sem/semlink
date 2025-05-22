@@ -2,10 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/spf13/cobra"
 	"golang.org/x/sys/unix"
+	"log"
 )
 
 func init() {
@@ -13,13 +12,17 @@ func init() {
 }
 
 var inspectCmd = &cobra.Command{
-	Use:   "inspect",
+	Use:   "inspect [path...]",
 	Short: "Inspect folder semlink data",
-	Long:  `List all semlink xattr data for the specified directory.`,
-	Args:  cobra.ExactArgs(1),
+	Long:  `List all semlink xattr data for the specified directories. Supports multiple paths.`,
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		filePath := args[0]
-		displaySemlinkXAttrs(filePath)
+		for _, path := range args {
+			if len(args) > 1 {
+				fmt.Printf("\n=== %s ===\n", path)
+			}
+			displaySemlinkXAttrs(path)
+		}
 	},
 }
 
@@ -31,22 +34,25 @@ func displaySemlinkXAttrs(path string) {
 	}
 
 	inode := stat.Ino
-	folderType, err := getSemlinkType(path)
 
+	folderType, err := getSemlinkType(path)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Printf("Error getting semlink type for %s: %v", path, err)
+		return
 	}
 
 	if folderType == "" {
 		folderType = "no type found. Consider setting a type or scrubbing the folder tags"
 	}
 
+	fmt.Printf("Path: %s\n", path)
 	fmt.Printf("Inode: %d\n", inode)
 	fmt.Printf("Type: %s\n", folderType)
 
 	tags, err := getSemlinkTags(path)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Printf("Error getting semlink tags for %s: %v", path, err)
+		return
 	}
 
 	if len(tags) == 0 {
@@ -55,9 +61,7 @@ func displaySemlinkXAttrs(path string) {
 	}
 
 	fmt.Println("Parsed tags:")
-
 	for _, tag := range tags {
-		fmt.Printf("%s\n", tag)
+		fmt.Printf("  %s\n", tag)
 	}
-
 }
