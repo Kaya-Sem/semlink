@@ -35,3 +35,11 @@ cd
 go build -o semlink
 ln -s ...
 ````
+
+
+
+
+
+### Roadmap
+
+- [ ] Export a bipartite / chart chart

@@ -74,6 +74,11 @@ func setType(path string, typeArg Type) error {
 	return nil
 }
 
+/*
+Checks if a path has a semlink bind mounted subtree, and gives back it's path when found.
+This is achieved by checking for the virtual type
+*/
+
 func runTypeSet(cmd *cobra.Command, args []string) {
 	typeArg := args[0]
 	path := args[1]
